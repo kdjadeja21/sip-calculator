@@ -63,7 +63,7 @@ const InvestmentChart: React.FC<Props> = ({ data }) => {
           stackId="1"
           stroke="#82ca9d"
           fill="#82ca9d"
-          name="Total Amount"
+          name="Total Value"
         />
       </AreaChart>
     </ResponsiveContainer>

@@ -5,8 +5,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SIP Calculator",
-  description: "SIP Calculator",
+  title: "SIP Calculator - Systematic Investment Plan Calculator Online",
+  description:
+    "SIP Calculator - Systematic Investment Plan calculator is a tool that helps you determine the returns you can avail when parking your funds in such investment tools.",
 };
 
 export default function RootLayout({

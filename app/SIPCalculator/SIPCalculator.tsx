@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from "react";
-import InvestmentChart from "../InvestmentChart/InvestmentChart";
+import React, { useEffect, useState } from "react";
+
 import {
   Button,
   TextField,
@@ -18,7 +18,11 @@ import {
   Card,
   CardContent,
   Grid,
+  Select,
+  MenuItem,
 } from "@mui/material";
+import InvestmentChart from "../InvestmentChart/InvestmentChart";
+import InvestmentPieChart from "../InvestmentPieChart/InvestmentPieChart";
 import styles from "../page.module.css";
 
 interface Result {
@@ -30,20 +34,6 @@ interface Result {
   total_amount: string;
 }
 
-// const useStyles = makeStyles(() => ({
-//   card: {
-//     maxWidth: 400,
-//     margin: "auto",
-//     marginTop: "15px",
-//     boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-//     borderRadius: "9px",
-//     backgroundColor: "#f5f5f5",
-//   },
-//   formItem: {
-//     marginBottom: "9px",
-//   },
-// }));
-
 const SIPCalculator: React.FC = () => {
   const [investmentAmount, setInvestmentAmount] = useState<string>("60000");
   const [returns, setReturns] = useState<string>("29.24");
@@ -51,6 +41,49 @@ const SIPCalculator: React.FC = () => {
   const [withdrawAfter, setWithdrawAfter] = useState<string>("15");
   const [results, setResults] = useState<Result[]>([]);
   const [tabValue, setTabValue] = useState<number>(0);
+  const [error, setError] = useState<string>("");
+  const [pieData, setPieData] = useState<any>([]);
+  const [chartType, setChartType] = useState("AreaChart");
+
+  const validateInputs = () => {
+    let errorMessage = "";
+
+    if (
+      isNaN(parseFloat(investmentAmount)) ||
+      parseFloat(investmentAmount) < 500
+    ) {
+      errorMessage +=
+        "Investment Amount should be a positive number and at least 500. ";
+    }
+
+    if (isNaN(parseFloat(returns)) || parseFloat(returns) < 1) {
+      errorMessage +=
+        "\n Returns should be a positive number and at least 1%. ";
+    }
+
+    if (isNaN(parseInt(investingTill)) || parseInt(investingTill) < 5) {
+      errorMessage +=
+        "\n Investing Till should be a positive integer and at least 5. ";
+    }
+
+    if (
+      isNaN(parseInt(withdrawAfter)) ||
+      parseInt(withdrawAfter) < parseInt(investingTill)
+    ) {
+      errorMessage +=
+        "\n Withdraw After should be a positive integer greater than Investing Till. ";
+    }
+
+    if (errorMessage !== "") {
+      setError(errorMessage);
+      return false;
+    }
+    return true;
+  };
+
+  useEffect(() => {
+    validateInputs() && setError("");
+  }, [investmentAmount, returns, investingTill, withdrawAfter]);
 
   const calculateCompoundInterest = () => {
     const resultsArray: Result[] = [];
@@ -88,7 +121,17 @@ const SIPCalculator: React.FC = () => {
       };
       resultsArray.push(result);
     }
-
+    const pieData = [
+      {
+        name: "Invested Amount",
+        value: Number(resultsArray[resultsArray.length - 1].invested_amount),
+      },
+      {
+        name: "Total Value",
+        value: Number(resultsArray[resultsArray.length - 1].total_amount),
+      },
+    ];
+    setPieData([...pieData]);
     setResults(resultsArray);
   };
 
@@ -98,7 +141,18 @@ const SIPCalculator: React.FC = () => {
 
   return (
     <Container>
-      <Typography variant="h2" gutterBottom>
+      <Typography
+        variant="h2"
+        gutterBottom
+        style={{
+          fontFamily: "Arial, sans-serif",
+          fontWeight: "bold",
+          fontSize: "2.5rem",
+          color: "#333", // Change color as needed
+          textAlign: "center",
+          letterSpacing: "2px",
+        }}
+      >
         SIP Calculator
       </Typography>
       <Card className={styles.card}>
@@ -116,10 +170,11 @@ const SIPCalculator: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Returns(%)"
+                label="Expected return rate (p.a) %"
                 type="number"
                 value={returns}
                 onChange={(e) => setReturns(e.target.value)}
+                placeholder="%"
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -141,9 +196,18 @@ const SIPCalculator: React.FC = () => {
               />
             </Grid>
           </Grid>
-
+          <Typography
+            style={{ color: "red", width: "100%", maxWidth: "100%" }}
+            sx={{ whiteSpace: "pre-line" }}
+          >
+            {error}
+          </Typography>
           <br />
-          <Button variant="contained" onClick={calculateCompoundInterest}>
+          <Button
+            variant="contained"
+            onClick={calculateCompoundInterest}
+            disabled={Boolean(error.length)}
+          >
             Calculate
           </Button>
         </CardContent>
@@ -157,7 +221,23 @@ const SIPCalculator: React.FC = () => {
               <Tab label="Table" />
             </Tabs>
             <div role="tabpanel" hidden={tabValue !== 0}>
-              <InvestmentChart data={[...results]} />
+              <div>
+                <label>Chart Type:</label>
+                <Select
+                  value={chartType}
+                  onChange={(e) => setChartType(e.target.value)}
+                  size="small"
+                >
+                  <MenuItem value="PieChart">Pie Chart</MenuItem>
+                  <MenuItem value="AreaChart">Area Chart</MenuItem>
+                </Select>
+              </div>
+              <br />
+              {chartType === "PieChart" ? (
+                <InvestmentPieChart data={[...pieData]} />
+              ) : (
+                <InvestmentChart data={[...results]} />
+              )}
             </div>
             <div role="tabpanel" hidden={tabValue !== 1}>
               <TableContainer component={Paper} sx={{ maxHeight: 440 }}>
@@ -175,10 +255,24 @@ const SIPCalculator: React.FC = () => {
                     {results.map((result) => (
                       <TableRow key={result.id}>
                         <TableCell>{result.year}</TableCell>
-                        <TableCell>{result.invested_amount}</TableCell>
-                        <TableCell>{result.amount}</TableCell>
-                        <TableCell>{result.interest}</TableCell>
-                        <TableCell>{result.total_amount}</TableCell>
+                        <TableCell>{`₹${new Intl.NumberFormat("en-IN").format(
+                          parseFloat(result.invested_amount)
+                        )}`}</TableCell>
+                        <TableCell>
+                          {`₹${new Intl.NumberFormat("en-IN").format(
+                            parseFloat(result.amount)
+                          )}`}
+                        </TableCell>
+                        <TableCell>
+                          {`₹${new Intl.NumberFormat("en-IN").format(
+                            parseFloat(result.interest)
+                          )}`}
+                        </TableCell>
+                        <TableCell>
+                          {`₹${new Intl.NumberFormat("en-IN").format(
+                            parseFloat(result.total_amount)
+                          )}`}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
