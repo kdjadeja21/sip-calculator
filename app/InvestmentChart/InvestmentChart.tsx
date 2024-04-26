@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { CroresLacsFormatter } from "../utils/utils";
 
 interface Data {
   id: number;
@@ -38,11 +39,7 @@ const InvestmentChart: React.FC<Props> = ({ data }) => {
           dataKey="year"
           label={{ value: "Year", position: "insideBottom", offset: -10 }}
         />
-        <YAxis
-          tickFormatter={(value) =>
-            new Intl.NumberFormat("en-IN").format(value)
-          }
-        />
+        <YAxis tickFormatter={CroresLacsFormatter} />
         <Tooltip
           formatter={(value: string) =>
             `₹${new Intl.NumberFormat("en-IN").format(parseFloat(value))}`

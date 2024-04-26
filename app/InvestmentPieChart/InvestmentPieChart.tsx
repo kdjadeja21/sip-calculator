@@ -7,6 +7,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { formatIndianRupees } from "../utils/utils";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
@@ -41,9 +42,7 @@ const InvestmentPieChart: React.FC<Props> = ({ data }) => {
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: string) =>
-              `₹${new Intl.NumberFormat("en-IN").format(parseFloat(value))}`
-            }
+            formatter={(value: number) => "₹" + formatIndianRupees(value)}
           />
           <Legend verticalAlign="top" height={36} />
         </PieChart>

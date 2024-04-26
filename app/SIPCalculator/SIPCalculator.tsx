@@ -24,6 +24,7 @@ import {
 import InvestmentChart from "../InvestmentChart/InvestmentChart";
 import InvestmentPieChart from "../InvestmentPieChart/InvestmentPieChart";
 import styles from "../page.module.css";
+import { formatIndianRupees } from "../utils/utils";
 
 interface Result {
   id: number;
@@ -81,9 +82,13 @@ const SIPCalculator: React.FC = () => {
     return true;
   };
 
-  useEffect(() => {
-    validateInputs() && setError("");
-  }, [investmentAmount, returns, investingTill, withdrawAfter]);
+  useEffect(
+    () => {
+      validateInputs() && setError("");
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [investmentAmount, returns, investingTill, withdrawAfter]
+  );
 
   const calculateCompoundInterest = () => {
     const resultsArray: Result[] = [];
@@ -148,9 +153,10 @@ const SIPCalculator: React.FC = () => {
           fontFamily: "Arial, sans-serif",
           fontWeight: "bold",
           fontSize: "2.5rem",
-          color: "#333", // Change color as needed
+          color: "#00b386",
           textAlign: "center",
           letterSpacing: "2px",
+          margin: "15px",
         }}
       >
         SIP Calculator
@@ -207,6 +213,8 @@ const SIPCalculator: React.FC = () => {
             variant="contained"
             onClick={calculateCompoundInterest}
             disabled={Boolean(error.length)}
+            // style={{ background: "#00b386" }}
+            color="success"
           >
             Calculate
           </Button>
@@ -216,13 +224,21 @@ const SIPCalculator: React.FC = () => {
       {results.length ? (
         <Card>
           <CardContent>
+            <Typography>
+              After <strong>{withdrawAfter}</strong> years, your investment of{" "}
+              <strong>₹ {formatIndianRupees(pieData[0].value)}</strong> will
+              grow to{" "}
+              <strong className={styles.green}>
+                ₹ {formatIndianRupees(pieData[1].value)}*
+              </strong>{" "}
+              @ {returns}% p.a.
+            </Typography>
             <Tabs value={tabValue} onChange={handleTabChange}>
               <Tab label="Chart" />
               <Tab label="Table" />
             </Tabs>
             <div role="tabpanel" hidden={tabValue !== 0}>
-              <div>
-                <label>Chart Type:</label>
+              <div style={{ margin: "15px" }}>
                 <Select
                   value={chartType}
                   onChange={(e) => setChartType(e.target.value)}
