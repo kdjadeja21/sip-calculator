@@ -1,18 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
-
+import React, { useEffect, useState, lazy, Suspense } from "react";
 import {
   Button,
   TextField,
   Typography,
-  TableContainer,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
   Container,
-  Paper,
   Tabs,
   Tab,
   Card,
@@ -21,12 +13,18 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-import InvestmentChart from "../InvestmentChart/InvestmentChart";
-import InvestmentPieChart from "../InvestmentPieChart/InvestmentPieChart";
+
 import styles from "../page.module.css";
 import { formatIndianRupees } from "../utils/utils";
+const TableView = lazy(() => import("../TableView/TableView"));
+const InvestmentChart = lazy(
+  () => import("../InvestmentChart/InvestmentChart")
+);
+const InvestmentPieChart = lazy(
+  () => import("../InvestmentPieChart/InvestmentPieChart")
+);
 
-interface Result {
+export interface Result {
   id: number;
   year: number;
   invested_amount: string;
@@ -38,13 +36,14 @@ interface Result {
 const SIPCalculator: React.FC = () => {
   const [investmentAmount, setInvestmentAmount] = useState<string>("60000");
   const [returns, setReturns] = useState<string>("29.24");
-  const [investingTill, setInvestingTill] = useState<string>("15");
+  const [investingTill, setInvestingTill] = useState<string>("5");
   const [withdrawAfter, setWithdrawAfter] = useState<string>("15");
   const [results, setResults] = useState<Result[]>([]);
   const [tabValue, setTabValue] = useState<number>(0);
   const [error, setError] = useState<string>("");
   const [pieData, setPieData] = useState<any>([]);
-  const [chartType, setChartType] = useState("AreaChart");
+  const [chartType, setChartType] = useState<string>("AreaChart");
+  const [investmentType, setInvestmentType] = useState<string>("yearly");
 
   const validateInputs = () => {
     let errorMessage = "";
@@ -103,21 +102,47 @@ const SIPCalculator: React.FC = () => {
         totalAmount = parseFloat(investmentAmount);
       }
 
+      // const amountValue: any =
+      //   resultsArray.length > 0
+      //     ? year > parseInt(investingTill) || investmentType === "lumpsum"
+      //       ? parseFloat(totalAmount).toFixed(0)
+      //       : parseFloat(totalAmount) + parseFloat(investmentAmount)
+      //     : investmentAmount;
+
+      const investment =
+        investmentType === "monthly"
+          ? parseFloat(investmentAmount) * 12
+          : parseFloat(investmentAmount);
+
       const amountValue: any =
         resultsArray.length > 0
-          ? year > parseInt(investingTill)
+          ? investmentType === "lumpsum"
             ? parseFloat(totalAmount).toFixed(0)
+            : investmentType !== "lumpsum" && year > parseInt(investingTill)
+            ? parseFloat(totalAmount).toFixed(0)
+            : investmentType === "monthly"
+            ? investment + parseFloat(totalAmount)
             : parseFloat(totalAmount) + parseFloat(investmentAmount)
+          : investmentType === "monthly"
+          ? parseFloat(investmentAmount) * 12
           : investmentAmount;
+
       const interest: any =
         (parseFloat(amountValue) * parseFloat(returns)) / 100;
       const result: Result = {
         id: year,
         year,
         invested_amount:
-          year > parseInt(investingTill)
+          investmentType === "lumpsum"
+            ? parseFloat(investmentAmount).toFixed(0)
+            : year > parseInt(investingTill) && investmentType !== "lumpsum"
             ? resultsArray[resultsArray.length - 1].invested_amount
+            : investmentType === "monthly"
+            ? (parseFloat(investmentAmount) * 12 * year).toFixed(0)
             : (parseFloat(investmentAmount) * year).toFixed(0),
+        // year > parseInt(investingTill)
+        //   ? resultsArray[resultsArray.length - 1].invested_amount
+        //   : (parseFloat(investmentAmount) * year).toFixed(0),
         amount: parseFloat(amountValue).toFixed(0),
         interest: parseFloat(interest).toFixed(0),
         total_amount: (parseFloat(amountValue) + parseFloat(interest)).toFixed(
@@ -167,11 +192,22 @@ const SIPCalculator: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Investment Amount(Yearly)"
+                label="Investment Amount"
                 type="number"
                 value={investmentAmount}
                 onChange={(e) => setInvestmentAmount(e.target.value)}
               />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Select
+                value={investmentType}
+                onChange={(e) => setInvestmentType(e.target.value)}
+                size="small"
+              >
+                <MenuItem value="yearly">Yearly</MenuItem>
+                <MenuItem value="monthly">Monthly</MenuItem>
+                <MenuItem value="lumpsum">Lumpsum</MenuItem>
+              </Select>
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
@@ -183,15 +219,17 @@ const SIPCalculator: React.FC = () => {
                 placeholder="%"
               />
             </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Investing Till (Year)"
-                type="number"
-                value={investingTill}
-                onChange={(e) => setInvestingTill(e.target.value)}
-              />
-            </Grid>
+            {investmentType !== "lumpsum" && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Investing Till (Year)"
+                  type="number"
+                  value={investingTill}
+                  onChange={(e) => setInvestingTill(e.target.value)}
+                />
+              </Grid>
+            )}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -233,7 +271,11 @@ const SIPCalculator: React.FC = () => {
               </strong>{" "}
               @ {returns}% p.a.
             </Typography>
-            <Tabs value={tabValue} onChange={handleTabChange}>
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              variant="fullWidth"
+            >
               <Tab label="Chart" />
               <Tab label="Table" />
             </Tabs>
@@ -244,56 +286,25 @@ const SIPCalculator: React.FC = () => {
                   onChange={(e) => setChartType(e.target.value)}
                   size="small"
                 >
-                  <MenuItem value="PieChart">Pie Chart</MenuItem>
                   <MenuItem value="AreaChart">Area Chart</MenuItem>
+                  <MenuItem value="PieChart">Pie Chart</MenuItem>
                 </Select>
               </div>
               <br />
               {chartType === "PieChart" ? (
-                <InvestmentPieChart data={[...pieData]} />
+                <Suspense fallback={<div>Loading...</div>}>
+                  <InvestmentPieChart data={[...pieData]} />
+                </Suspense>
               ) : (
-                <InvestmentChart data={[...results]} />
+                <Suspense fallback={<div>Loading...</div>}>
+                  <InvestmentChart data={[...results]} />
+                </Suspense>
               )}
             </div>
             <div role="tabpanel" hidden={tabValue !== 1}>
-              <TableContainer component={Paper} sx={{ maxHeight: 440 }}>
-                <Table stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Year</TableCell>
-                      <TableCell>Invested Amount</TableCell>
-                      <TableCell>Amount</TableCell>
-                      <TableCell>Interest</TableCell>
-                      <TableCell>Total Amount</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {results.map((result) => (
-                      <TableRow key={result.id}>
-                        <TableCell>{result.year}</TableCell>
-                        <TableCell>{`₹${new Intl.NumberFormat("en-IN").format(
-                          parseFloat(result.invested_amount)
-                        )}`}</TableCell>
-                        <TableCell>
-                          {`₹${new Intl.NumberFormat("en-IN").format(
-                            parseFloat(result.amount)
-                          )}`}
-                        </TableCell>
-                        <TableCell>
-                          {`₹${new Intl.NumberFormat("en-IN").format(
-                            parseFloat(result.interest)
-                          )}`}
-                        </TableCell>
-                        <TableCell>
-                          {`₹${new Intl.NumberFormat("en-IN").format(
-                            parseFloat(result.total_amount)
-                          )}`}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <Suspense fallback={<div>Loading...</div>}>
+                <TableView results={results} />
+              </Suspense>
             </div>
           </CardContent>
         </Card>
