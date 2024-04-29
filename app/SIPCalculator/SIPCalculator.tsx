@@ -12,6 +12,8 @@ import {
   Grid,
   Select,
   MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 
 import styles from "../page.module.css";
@@ -199,16 +201,22 @@ const SIPCalculator: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <Select
-                value={investmentType}
-                onChange={(e) => setInvestmentType(e.target.value)}
-                size="small"
-                aria-label="mode of premium"
-              >
-                <MenuItem value="yearly">Yearly</MenuItem>
-                <MenuItem value="monthly">Monthly</MenuItem>
-                <MenuItem value="lumpsum">Lumpsum</MenuItem>
-              </Select>
+              <FormControl fullWidth>
+                <InputLabel id="mode-select-label">Mode of Premium</InputLabel>
+                <Select
+                  labelId="mode-select-label"
+                  id="mode-select"
+                  value={investmentType}
+                  onChange={(e) => setInvestmentType(e.target.value)}
+                  size="small"
+                  aria-label="mode of premium"
+                  label="Mode of Premium"
+                >
+                  <MenuItem value="yearly">Yearly</MenuItem>
+                  <MenuItem value="monthly">Monthly</MenuItem>
+                  <MenuItem value="lumpsum">Lumpsum</MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
