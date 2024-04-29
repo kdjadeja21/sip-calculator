@@ -203,6 +203,7 @@ const SIPCalculator: React.FC = () => {
                 value={investmentType}
                 onChange={(e) => setInvestmentType(e.target.value)}
                 size="small"
+                aria-label="mode of premium"
               >
                 <MenuItem value="yearly">Yearly</MenuItem>
                 <MenuItem value="monthly">Monthly</MenuItem>
