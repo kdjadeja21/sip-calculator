@@ -24,6 +24,10 @@ export default function RootLayout({
           name="google-site-verification"
           content="xS6z7cPlnipI4ebrj2O5e68TLXF8NXfjrf8A_qGR4zk"
         />
+        <meta
+          name="keywords"
+          content="sip calculator, sip return calculator, sip investment calculator, sip mutual fund calculator, sip investment, systematic investment plan, return calculator, investment plan calculator, mf calculator, sip investment in india, lumpsum calculator, sip lumpsum calculator, mutual fund calculator india, sip return calculator india, sip calculator india, monthly sip calculator, yearly sip calculator"
+        />
       </head>
       <body className={inter.className}>
         {children}
