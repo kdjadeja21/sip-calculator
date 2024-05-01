@@ -14,10 +14,11 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  InputAdornment,
 } from "@mui/material";
 
 import styles from "../page.module.css";
-import { formatIndianRupees } from "../utils/utils";
+import { formatIndianRupees, CroresLacsFormatter } from "../utils/utils";
 const TableView = lazy(() => import("../TableView/TableView"));
 const InvestmentChart = lazy(
   () => import("../InvestmentChart/InvestmentChart")
@@ -83,6 +84,15 @@ const SIPCalculator: React.FC = () => {
     return true;
   };
 
+  const handleModeChange = (mode: string): void => {
+    if (mode === "yearly" && investmentType !== "lumpsum") {
+      setInvestmentAmount((parseFloat(investmentAmount) * 12).toString());
+    } else if (mode === "monthly" && investmentType !== "lumpsum") {
+      setInvestmentAmount((parseFloat(investmentAmount) / 12).toString());
+    }
+    setInvestmentType(mode);
+  };
+
   useEffect(
     () => {
       validateInputs() && setError("");
@@ -103,13 +113,6 @@ const SIPCalculator: React.FC = () => {
       } else {
         totalAmount = parseFloat(investmentAmount);
       }
-
-      // const amountValue: any =
-      //   resultsArray.length > 0
-      //     ? year > parseInt(investingTill) || investmentType === "lumpsum"
-      //       ? parseFloat(totalAmount).toFixed(0)
-      //       : parseFloat(totalAmount) + parseFloat(investmentAmount)
-      //     : investmentAmount;
 
       const investment =
         investmentType === "monthly"
@@ -142,9 +145,7 @@ const SIPCalculator: React.FC = () => {
             : investmentType === "monthly"
             ? (parseFloat(investmentAmount) * 12 * year).toFixed(0)
             : (parseFloat(investmentAmount) * year).toFixed(0),
-        // year > parseInt(investingTill)
-        //   ? resultsArray[resultsArray.length - 1].invested_amount
-        //   : (parseFloat(investmentAmount) * year).toFixed(0),
+
         amount: parseFloat(amountValue).toFixed(0),
         interest: parseFloat(interest).toFixed(0),
         total_amount: (parseFloat(amountValue) + parseFloat(interest)).toFixed(
@@ -191,24 +192,35 @@ const SIPCalculator: React.FC = () => {
       <Card className={styles.card}>
         <CardContent>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
                 label="Investment Amount"
                 type="number"
                 value={investmentAmount}
                 onChange={(e) => setInvestmentAmount(e.target.value)}
+                InputProps={{
+                  endAdornment: investmentType !== "lumpsum" && (
+                    <InputAdornment style={{ color: "gray" }} position="end">
+                      /{investmentType.replace(/ly$/, "")}
+                    </InputAdornment>
+                  ),
+                }}
               />
+              <Typography style={{ marginLeft: "10px" }}>
+                {parseFloat(investmentAmount) > 1 &&
+                  CroresLacsFormatter(parseFloat(investmentAmount))}
+              </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={3}>
               <FormControl fullWidth>
                 <InputLabel id="mode-select-label">Mode of Premium</InputLabel>
                 <Select
                   labelId="mode-select-label"
                   id="mode-select"
                   value={investmentType}
-                  onChange={(e) => setInvestmentType(e.target.value)}
-                  size="small"
+                  onChange={(e) => handleModeChange(e.target.value)}
+                  size="medium"
                   aria-label="mode of premium"
                   label="Mode of Premium"
                 >
@@ -232,20 +244,34 @@ const SIPCalculator: React.FC = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Investing Till (Year)"
+                  label="Investing Till"
                   type="number"
                   value={investingTill}
                   onChange={(e) => setInvestingTill(e.target.value)}
+                  InputProps={{
+                    endAdornment: investmentType !== "lumpsum" && (
+                      <InputAdornment style={{ color: "gray" }} position="end">
+                        Years
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
             )}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Withdraw After (Year)"
+                label="Withdraw After"
                 type="number"
                 value={withdrawAfter}
                 onChange={(e) => setWithdrawAfter(e.target.value)}
+                InputProps={{
+                  endAdornment: investmentType !== "lumpsum" && (
+                    <InputAdornment style={{ color: "gray" }} position="end">
+                      Years
+                    </InputAdornment>
+                  ),
+                }}
               />
             </Grid>
           </Grid>
@@ -260,7 +286,6 @@ const SIPCalculator: React.FC = () => {
             variant="contained"
             onClick={calculateCompoundInterest}
             disabled={Boolean(error.length)}
-            // style={{ background: "#00b386" }}
             color="success"
           >
             Calculate
