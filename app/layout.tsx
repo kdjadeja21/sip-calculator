@@ -25,7 +25,7 @@ export default function RootLayout({
         />
         <meta
           name="keywords"
-          content="sip calculator, sip return calculator, sip investment calculator, sip mutual fund calculator, sip investment, systematic investment plan, return calculator, investment plan calculator, mf calculator, sip investment in india, lumpsum calculator, sip lumpsum calculator, mutual fund calculator india, sip return calculator india, sip calculator india, monthly sip calculator, yearly sip calculator"
+          content="sip calculator, sip return calculator, sip investment calculator, sip mutual fund calculator, sip investment, systematic investment plan, return calculator, investment plan calculator, mf calculator, sip investment in india, lumpsum calculator, sip lumpsum calculator, mutual fund calculator india, sip return calculator india, sip calculator india, monthly sip calculator, yearly sip calculator, compound interest calculator, compound interest calculator online, compound interest"
         />
       </head>
       <body className={inter.className}>

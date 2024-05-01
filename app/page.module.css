@@ -119,8 +119,9 @@
 .footer {
   margin:"15px";
   padding-bottom: "5em";
-  font-weight: 700;
-  font-family: var(--font-mono);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Enable hover only on non-touch devices */
