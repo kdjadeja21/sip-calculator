@@ -22,3 +22,17 @@ export const CroresLacsFormatter = (value: number): string => {
   }
   return value.toLocaleString("en-IN", { maximumFractionDigits: 2 });
 };
+
+export function calculatePresentValue(
+  futureAmount: number,
+  inflationRate: number,
+  years: number
+): number {
+  // Convert inflation rate from percentage to decimal
+  inflationRate = inflationRate / 100;
+
+  // Calculate present value
+  const presentValue = futureAmount / Math.pow(1 + inflationRate, years);
+
+  return presentValue;
+}

@@ -18,7 +18,11 @@ import {
 } from "@mui/material";
 
 import styles from "../page.module.css";
-import { formatIndianRupees, CroresLacsFormatter } from "../utils/utils";
+import {
+  formatIndianRupees,
+  CroresLacsFormatter,
+  calculatePresentValue,
+} from "../utils/utils";
 const TableView = lazy(() => import("../TableView/TableView"));
 const InvestmentChart = lazy(
   () => import("../InvestmentChart/InvestmentChart")
@@ -39,6 +43,7 @@ export interface Result {
 const SIPCalculator: React.FC = () => {
   const [investmentAmount, setInvestmentAmount] = useState<string>("60000");
   const [returns, setReturns] = useState<string>("29.24");
+  const [inflation, setInflation] = useState<string>("6");
   const [investingTill, setInvestingTill] = useState<string>("5");
   const [withdrawAfter, setWithdrawAfter] = useState<string>("15");
   const [results, setResults] = useState<Result[]>([]);
@@ -77,6 +82,11 @@ const SIPCalculator: React.FC = () => {
         "\n Withdraw After should be a positive integer greater than Investing Till. ";
     }
 
+    if (isNaN(parseFloat(inflation)) || parseFloat(inflation) < 1) {
+      errorMessage +=
+        "\n Inflation should be a positive number and at least 1%. ";
+    }
+
     if (errorMessage !== "") {
       setError(errorMessage);
       return false;
@@ -98,7 +108,7 @@ const SIPCalculator: React.FC = () => {
       validateInputs() && setError("");
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [investmentAmount, returns, investingTill, withdrawAfter]
+    [investmentAmount, returns, investingTill, withdrawAfter, inflation]
   );
 
   const calculateCompoundInterest = () => {
@@ -274,6 +284,16 @@ const SIPCalculator: React.FC = () => {
                 }}
               />
             </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Inflation rate (p.a) %"
+                type="number"
+                value={inflation}
+                onChange={(e) => setInflation(e.target.value)}
+                placeholder="%"
+              />
+            </Grid>
           </Grid>
           <Typography
             style={{ color: "red", width: "100%", maxWidth: "100%" }}
@@ -301,9 +321,28 @@ const SIPCalculator: React.FC = () => {
               <strong>₹ {formatIndianRupees(pieData[0].value)}</strong> will
               grow to{" "}
               <strong className={styles.green}>
-                ₹ {formatIndianRupees(pieData[1].value)}*
+                ₹{formatIndianRupees(pieData[1].value)}*
               </strong>{" "}
               @ {returns}% p.a.
+            </Typography>
+            <br />
+            <Typography>
+              The value of{" "}
+              <strong>₹{formatIndianRupees(pieData[1].value)}*</strong> after{" "}
+              <strong>{withdrawAfter}</strong> years, considering a{" "}
+              <strong>{inflation}%</strong> annual inflation rate, would be
+              approximately
+              <strong className={styles.green}>
+                ₹
+                {formatIndianRupees(
+                  calculatePresentValue(
+                    pieData[1].value,
+                    Number(inflation),
+                    Number(withdrawAfter)
+                  )
+                )}
+              </strong>{" "}
+              in today&apos;s terms.
             </Typography>
             <Tabs
               value={tabValue}
@@ -314,7 +353,7 @@ const SIPCalculator: React.FC = () => {
               <Tab label="Table" />
             </Tabs>
             <div role="tabpanel" hidden={tabValue !== 0}>
-              <div style={{ margin: "15px" }}>
+              {/* <div style={{ margin: "15px" }}>
                 <Select
                   value={chartType}
                   onChange={(e) => setChartType(e.target.value)}
@@ -324,7 +363,7 @@ const SIPCalculator: React.FC = () => {
                   <MenuItem value="PieChart">Pie Chart</MenuItem>
                 </Select>
               </div>
-              <br />
+              <br /> */}
               {chartType === "PieChart" ? (
                 <Suspense fallback={<div>Loading...</div>}>
                   <InvestmentPieChart data={[...pieData]} />
